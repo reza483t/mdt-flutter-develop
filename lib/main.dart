@@ -35,10 +35,10 @@ class MyApp extends StatelessWidget {
 }
 
 class TorControlPage extends StatefulWidget {
-
   final InitialValues initialValues;
 
-  const TorControlPage({Key? key, required this.initialValues}) : super(key: key);
+  const TorControlPage({Key? key, required this.initialValues})
+      : super(key: key);
 
   @override
   _TorControlPageState createState() => _TorControlPageState();
@@ -52,22 +52,20 @@ class _TorControlPageState extends State<TorControlPage> {
   bool _isTorConnected = false;
   Timer? _timer;
   List<FlSpot> downloadedBwInfo =
-  List.generate(20, (index) => FlSpot(index.toDouble(), 0.0));
+      List.generate(20, (index) => FlSpot(index.toDouble(), 0.0));
 
-  List<Map<dynamic,dynamic>> _circuitsData = List.empty();
+  List<Map<dynamic, dynamic>> _circuitsData = List.empty();
 
   late Map<dynamic, dynamic>? _circuitRelayInfo;
   late String? _countryCode;
 
   Future<void> _connectToTor() async {
     final res = await torController.connectToTor(
-      ip: widget.initialValues.ip,
-      port:widget.initialValues.port
-      );
+        ip: widget.initialValues.ip, port: widget.initialValues.port);
     print("res message : ${res['message']}");
     if (res['status']) {
-      final authRes =
-      await torController.authenticate(password: widget.initialValues.password);
+      final authRes = await torController.authenticate(
+          password: widget.initialValues.password);
       print("res message : ${authRes['message']}");
       if (authRes['status']) {
         setState(() {
@@ -94,14 +92,12 @@ class _TorControlPageState extends State<TorControlPage> {
           print("timer started");
         }
 
-        final messages=
-
-      await torController.getDirectMessages();
-      setState(() {
-      _messages = (messages as List).map((item) => item as String).toList();
-      });
+        final messages = await torController.getDirectMessages();
+        setState(() {
+          _messages = (messages as List).map((item) => item as String).toList();
+        });
       } else {
-      _timer = null;
+        _timer = null;
       }
     });
   }
@@ -142,19 +138,19 @@ class _TorControlPageState extends State<TorControlPage> {
 
   int provideRelaysLength() => _circuitsData.fold(
       0,
-          (totalRelays, circuit) =>
-      totalRelays +
+      (totalRelays, circuit) =>
+          totalRelays +
           (circuit["relays"] as List<Map<dynamic, dynamic>>).length);
 
   Future<void> fetchCircuitRelayInfo(String relayFingerPrint) async {
     print('newRelayInfo:');
     var newRelayInfo =
-    await torController.getRouterInfoByfingerPring(relayFingerPrint);
+        await torController.getRouterInfoByfingerPring(relayFingerPrint);
 
     // setState(() {
-      print('newRelayInfo:$newRelayInfo');
-      _circuitRelayInfo = newRelayInfo;
-      
+    print('newRelayInfo:$newRelayInfo');
+    _circuitRelayInfo = newRelayInfo;
+
     // });
   }
 
@@ -175,74 +171,65 @@ class _TorControlPageState extends State<TorControlPage> {
           leading: _isTorConnected
               ? null
               : IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _tryAgain,
-          ),
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _tryAgain,
+                ),
         ),
         body: body());
   }
 
   Widget body() {
-    if( torController.getConnectionStatus() )
-    {fetchCircuitsStatus();}
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-    Expanded(
-    flex: 1,
-    child:
+    
+    if (torController.getConnectionStatus()) {
+      fetchCircuitsStatus();
+    }
 
-    ListView(
-    scrollDirection: Axis.vertical,
-    controller: ScrollController(),
-    children: [
-    Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [titleTextView("Circuits")],
-    ),
-    const SizedBox(height: 5),
-    circuitInformationsBox(
-    _circuitsData.length, provideRelaysLength()),
-    const SizedBox(height: 30),
-    Divider(),
-    const SizedBox(height: 30),
-    Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [titleTextView("Circuits  Details")],
-    ),
-    const SizedBox(height: 5),
-    ciruitDetails()
-    ],
-    ))
-    ]);
+    return Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+              flex: 1,
+              child: ListView(
+                scrollDirection: Axis.vertical,
+                controller: ScrollController(),
+                children: [
+
+                  circuitInformationsBox(
+                    
+                      _circuitsData.length, provideRelaysLength()),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      titleTextView("Circuits  Details"),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  ciruitDetails()
+                ],
+              ))
+        ]);
   }
 
   Widget circuitInformationsBox(int circuitCount, int relaysCount) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
       child: Container(
-        height: 300,
-        decoration: const BoxDecoration(
-            color: Color(0xff393E46),
-            borderRadius: BorderRadius.all(Radius.circular(10))),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(5, 25, 5, 5),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  customTextView("Total Circuits $circuitCount"),
-                  customTextView("Total Relays $relaysCount")
-                ],
-              )
-            ],
-          ),
+        height: 45,
+        child: Column(
+          children: [
+            
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text("Total Circuits $circuitCount",style: TextStyle(fontSize: 18),),
+                titleTextView("Circuits",),
+                Text("Total Relays $relaysCount",style: TextStyle(fontSize: 18),)
+              ],
+            
+            ),
+          ],
         ),
       ),
     );
@@ -268,7 +255,7 @@ class _TorControlPageState extends State<TorControlPage> {
 
   Widget ciruitDetails() {
     return SizedBox(
-      height: 250,
+      height: 300,
       child: ListView.separated(
           itemBuilder: (context, index) {
             return circuitDetailsBox(_circuitsData[index]);
@@ -303,12 +290,11 @@ class _TorControlPageState extends State<TorControlPage> {
                 customTextView("purpose : ${circuit["extraInfo"]["PURPOSE"]}")
               ]),
               Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    customTextView(
-                        "date created : ${(circuit["extraInfo"]["TIME_CREATED"] as String).split("T")[0]}")
-                  ],
-
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  customTextView(
+                      "date created : ${(circuit["extraInfo"]["TIME_CREATED"] as String).split("T")[0]}")
+                ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -323,19 +309,22 @@ class _TorControlPageState extends State<TorControlPage> {
                 child: ListView.builder(
                   itemBuilder: (context, index) {
                     // fetchCircuitRelayInfo(circuit["relays"][index]["Fingerprint"]);
-                     fetchCountryCode(_circuitRelayInfo?["ip"]);
+                    fetchCountryCode(_circuitRelayInfo?["ip"]);
                     return Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          customTextView("name : ${_circuitRelayInfo?["name"]}"),
+                          customTextView(
+                              "name : ${_circuitRelayInfo?["name"]}"),
                           customTextView("ip : ${_circuitRelayInfo?["ip"]}"),
-                          CountryFlag.fromCountryCode("$_countryCode".toUpperCase(),
-                              width: 15, height: 15)
+                          CountryFlag.fromCountryCode(
+                              "$_countryCode".toUpperCase(),
+                              width: 15,
+                              height: 15)
                         ]);
                   },
                   itemCount:
-                  (circuit["relays"] as List<Map<dynamic, dynamic>>).length,
+                      (circuit["relays"] as List<Map<dynamic, dynamic>>).length,
                 ),
               )
             ],
@@ -350,7 +339,7 @@ class _TorControlPageState extends State<TorControlPage> {
     super.initState();
     _connectToTor();
     _checkConnectionAndMessages();
-   fetchCircuitRelayInfo('3401BB20C195F2494CACC182A8486697995089E9');
+    fetchCircuitRelayInfo('3401BB20C195F2494CACC182A8486697995089E9');
   }
 
   @override
