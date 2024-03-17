@@ -131,9 +131,7 @@ class _TorControlPageState extends State<TorControlPage> {
 
     print('newCircuitsData:$newCircuitsData');
 
-    setState(() {
-      _circuitsData = newCircuitsData;
-    });
+    _circuitsData = newCircuitsData;
   }
 
   int provideRelaysLength() => _circuitsData.fold(
@@ -157,9 +155,7 @@ class _TorControlPageState extends State<TorControlPage> {
   Future<void> fetchCountryCode(String ipv4) async {
     String? newCountryCode = await torController.getCountryFromIp(ipv4);
 
-    setState(() {
-      _countryCode = newCountryCode;
-    });
+    _countryCode = newCountryCode;
   }
 
   @override
@@ -179,55 +175,138 @@ class _TorControlPageState extends State<TorControlPage> {
   }
 
   Widget body() {
-    
     if (torController.getConnectionStatus()) {
       fetchCircuitsStatus();
     }
-
     return Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-              flex: 1,
-              child: ListView(
-                scrollDirection: Axis.vertical,
-                controller: ScrollController(),
-                children: [
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        circuitInformationsBox(_circuitsData.length, provideRelaysLength()),
+        Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Row(
+            children: [
+              Text(
+                "Circuits  Details",
+                style: TextStyle(fontSize: 20),
+              ),
+            ],
+          ),
+        ),
+        circuitsGenralInfo(_circuitsData)
+      ],
+    );
+    // return Column(
+    //     mainAxisAlignment: MainAxisAlignment.start,
+    //     crossAxisAlignment: CrossAxisAlignment.center,
+    //     children: [
+    //       Expanded(
+    //           flex: 1,
+    //           child: ListView(
+    //             scrollDirection: Axis.vertical,
+    //             controller: ScrollController(),
+    //             children: [
 
-                  circuitInformationsBox(
-                    
-                      _circuitsData.length, provideRelaysLength()),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      titleTextView("Circuits  Details"),
-                    ],
-                  ),
-                  const SizedBox(height: 5),
-                  ciruitDetails()
+    //               circuitInformationsBox(
+
+    //                   _circuitsData.length, provideRelaysLength()),
+    //               Row(
+    //                 mainAxisAlignment: MainAxisAlignment.start,
+    //                 children: [
+    //                   titleTextView("Circuits  Details"),
+    //                 ],
+    //               ),
+    //               const SizedBox(height: 5),
+    //               ciruitDetails()
+    //             ],
+    //           ))
+    //     ]);
+  }
+
+  int getCircuitListViewItemCount(int length) {
+    if (length % 3 != 0) {
+      while (length % 3 != 0) {
+        length++;
+      }
+    }
+    return (length / 3).round();
+  }
+
+  Widget circuitDetailsBoxlistviw(Map<dynamic, dynamic> circuitDetailsInfo) {
+    fetchCircuitRelayInfo(circuitDetailsInfo["relays"]
+        [circuitDetailsInfo["relays"].length - 1]["Fingerprint"]);
+    fetchCountryCode(_circuitRelayInfo!["ip"]);
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        children: [
+          Text('id : ${circuitDetailsInfo["circuitId"]}'),
+          Text('status : ${circuitDetailsInfo["circuitStatus"]}'),
+          Text('flag : ${circuitDetailsInfo["extraInfo"]['BUILD_FLAGS']}'),
+          Text(
+              'time created : ${circuitDetailsInfo["extraInfo"]["TIME_CREATED"]}'),
+          Text('ip : ${_circuitRelayInfo!["ip"]}'),
+          CountryFlag.fromCountryCode("$_countryCode".toUpperCase(),
+              width: 30, height: 30)
+        ],
+      ),
+    );
+  }
+
+  Widget circuitsGenralInfo(List<Map<dynamic, dynamic>> circuitInfo) {
+    return Container(
+      height: 500,
+      child: ListView.separated(
+          controller: ScrollController(),
+          scrollDirection: Axis.vertical,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  circuitDetailsBoxlistviw(_circuitsData[index]),
+                  circuitDetailsBoxlistviw(_circuitsData[index + 1]),
+                  circuitDetailsBoxlistviw(_circuitsData[index + 2]),
                 ],
-              ))
-        ]);
+              ),
+            );
+          },
+          separatorBuilder: (context, index) => const SizedBox(
+                height: 10,
+              ),
+          itemCount: getCircuitListViewItemCount(circuitInfo.length)),
+    );
   }
 
   Widget circuitInformationsBox(int circuitCount, int relaysCount) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
       child: Container(
-        height: 45,
+        height: 50,
         child: Column(
           children: [
-            
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text("Total Circuits $circuitCount",style: TextStyle(fontSize: 18),),
-                titleTextView("Circuits",),
-                Text("Total Relays $relaysCount",style: TextStyle(fontSize: 18),)
+                Text(
+                  "Total Circuits $circuitCount",
+                  style: TextStyle(fontSize: 18),
+                ),
+                Text(
+                  "Circuits",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+                ),
+                Text(
+                  "Total Relays $relaysCount",
+                  style: TextStyle(fontSize: 18),
+                )
               ],
-            
             ),
           ],
         ),
@@ -253,86 +332,86 @@ class _TorControlPageState extends State<TorControlPage> {
             color: Color(0xff00ADB5)));
   }
 
-  Widget ciruitDetails() {
-    return SizedBox(
-      height: 300,
-      child: ListView.separated(
-          itemBuilder: (context, index) {
-            return circuitDetailsBox(_circuitsData[index]);
-          },
-          separatorBuilder: (context, index) => const SizedBox(height: 10),
-          itemCount: 1),
-    );
-  }
+  // Widget ciruitDetails() {
+  //   return SizedBox(
+  //     height: 300,
+  //     child: ListView.separated(
+  //         itemBuilder: (context, index) {
+  //           return circuitDetailsBox(_circuitsData[index]);
+  //         },
+  //         separatorBuilder: (context, index) => const SizedBox(height: 10),
+  //         itemCount: 1),
+  //   );
+  // }
 
-  Widget circuitDetailsBox(Map<dynamic, dynamic> circuit) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
-      child: Container(
-        decoration: const BoxDecoration(
-            color: Color(0xff393E46),
-            borderRadius: BorderRadius.all(Radius.circular(15))),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  customTextView("id : ${circuit["circuitId"]}"),
-                  customTextView("status : ${circuit["circuitStatus"]}"),
-                ],
-              ),
-              Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-                customTextView("purpose : ${circuit["extraInfo"]["PURPOSE"]}")
-              ]),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  customTextView(
-                      "date created : ${(circuit["extraInfo"]["TIME_CREATED"] as String).split("T")[0]}")
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  customTextView(
-                      "time created : ${(circuit["extraInfo"]["TIME_CREATED"] as String).split("T")[1]}")
-                ],
-              ),
-              customTextView("relays"),
-              SizedBox(
-                height: 80,
-                child: ListView.builder(
-                  itemBuilder: (context, index) {
-                    // fetchCircuitRelayInfo(circuit["relays"][index]["Fingerprint"]);
-                    fetchCountryCode(_circuitRelayInfo?["ip"]);
-                    return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          customTextView(
-                              "name : ${_circuitRelayInfo?["name"]}"),
-                          customTextView("ip : ${_circuitRelayInfo?["ip"]}"),
-                          CountryFlag.fromCountryCode(
-                              "$_countryCode".toUpperCase(),
-                              width: 15,
-                              height: 15)
-                        ]);
-                  },
-                  itemCount:
-                      (circuit["relays"] as List<Map<dynamic, dynamic>>).length,
-                ),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget circuitDetailsBox(Map<dynamic, dynamic> circuit) {
+  //   return Padding(
+  //     padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
+  //     child: Container(
+  //       decoration: const BoxDecoration(
+  //           color: Color(0xff393E46),
+  //           borderRadius: BorderRadius.all(Radius.circular(15))),
+  //       child: Padding(
+  //         padding: const EdgeInsets.all(8.0),
+  //         child: Column(
+  //           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //           crossAxisAlignment: CrossAxisAlignment.center,
+  //           children: [
+  //             Row(
+  //               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //               crossAxisAlignment: CrossAxisAlignment.center,
+  //               children: [
+  //                 customTextView("id : ${circuit["circuitId"]}"),
+  //                 customTextView("status : ${circuit["circuitStatus"]}"),
+  //               ],
+  //             ),
+  //             Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+  //               customTextView("purpose : ${circuit["extraInfo"]["PURPOSE"]}")
+  //             ]),
+  //             Row(
+  //               mainAxisAlignment: MainAxisAlignment.start,
+  //               children: [
+  //                 customTextView(
+  //                     "date created : ${(circuit["extraInfo"]["TIME_CREATED"] as String).split("T")[0]}")
+  //               ],
+  //             ),
+  //             Row(
+  //               mainAxisAlignment: MainAxisAlignment.start,
+  //               children: [
+  //                 customTextView(
+  //                     "time created : ${(circuit["extraInfo"]["TIME_CREATED"] as String).split("T")[1]}")
+  //               ],
+  //             ),
+  //             customTextView("relays"),
+  //             SizedBox(
+  //               height: 80,
+  //               child: ListView.builder(
+  //                 itemBuilder: (context, index) {
+  //                   fetchCircuitRelayInfo(circuit["relays"][index]["Fingerprint"]);
+  //                   fetchCountryCode(_circuitRelayInfo?["ip"]);
+  //                   return Row(
+  //                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //                       crossAxisAlignment: CrossAxisAlignment.center,
+  //                       children: [
+  //                         customTextView(
+  //                             "name : ${_circuitRelayInfo?["name"]}"),
+  //                         customTextView("ip : ${_circuitRelayInfo?["ip"]}"),
+  //                         CountryFlag.fromCountryCode(
+  //                             "$_countryCode".toUpperCase(),
+  //                             width: 15,
+  //                             height: 15)
+  //                       ]);
+  //                 },
+  //                 itemCount:
+  //                     (circuit["relays"] as List<Map<dynamic, dynamic>>).length,
+  //               ),
+  //             )
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   @override
   void initState() {
