@@ -4,6 +4,7 @@ import 'package:country_flags/country_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:helloworldtor/entity/initial-values.dart';
+import 'package:helloworldtor/relays_Page.dart';
 import 'package:helloworldtor/views/base_values_page.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'modules.dart'; // Import your TorController class
@@ -183,8 +184,8 @@ class _TorControlPageState extends State<TorControlPage> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         circuitInformationsBox(_circuitsData.length, provideRelaysLength()),
-        Padding(
-          padding: const EdgeInsets.all(10.0),
+        const Padding(
+          padding: EdgeInsets.all(10.0),
           child: Row(
             children: [
               Text(
@@ -234,24 +235,81 @@ class _TorControlPageState extends State<TorControlPage> {
   }
 
   Widget circuitDetailsBoxlistviw(Map<dynamic, dynamic> circuitDetailsInfo) {
-    fetchCircuitRelayInfo(circuitDetailsInfo["relays"]
-        [circuitDetailsInfo["relays"].length - 1]["Fingerprint"]);
-    fetchCountryCode(_circuitRelayInfo!["ip"]);
+    int testlength = (circuitDetailsInfo["relays"].length == 0)
+        ? 1
+        : circuitDetailsInfo["relays"].length - 1;
+    if (circuitDetailsInfo["relays"].length != 0) {
+      fetchCircuitRelayInfo(circuitDetailsInfo["relays"]
+          [circuitDetailsInfo["relays"].length - 1]["Fingerprint"]);
+      fetchCountryCode(_circuitRelayInfo!["ip"]);
+    }
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text('id : ${circuitDetailsInfo["circuitId"]}'),
-          Text('status : ${circuitDetailsInfo["circuitStatus"]}'),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('id : ${circuitDetailsInfo["circuitId"]}'),
+                SizedBox(
+                  width: 15,
+                ),
+                Text(
+                  ' ${circuitDetailsInfo["circuitStatus"]}',
+                  style: TextStyle(color: Color(0xfff00FF38)),
+                ),
+                SizedBox(
+                  width: 15,
+                ),
+                Text(
+                    'cration: ${circuitDetailsInfo["extraInfo"]["TIME_CREATED"]}'),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text('PURPOSE : ${circuitDetailsInfo["extraInfo"]['PURPOSE']}'),
+                SizedBox(
+                  width: 15,
+                ),
+                Text('  ${_circuitRelayInfo!["ip"]}'),
+                SizedBox(
+                  width: 15,
+                ),
+                CountryFlag.fromCountryCode("$_countryCode".toUpperCase(),
+                    width: 30, height: 30)
+              ],
+            ),
+          ),
           Text('flag : ${circuitDetailsInfo["extraInfo"]['BUILD_FLAGS']}'),
-          Text(
-              'time created : ${circuitDetailsInfo["extraInfo"]["TIME_CREATED"]}'),
-          Text('ip : ${_circuitRelayInfo!["ip"]}'),
-          CountryFlag.fromCountryCode("$_countryCode".toUpperCase(),
-              width: 30, height: 30)
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => relays_Page()),
+              );
+            },
+            child: Container(
+              margin: EdgeInsets.only(left: 50),
+              padding: EdgeInsets.all(10),
+              child: Text(
+                'show relays >> ',
+                style: TextStyle(color: Color(0xfff00B2EA).withOpacity(1)),
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 8,
+          )
         ],
       ),
     );
@@ -259,7 +317,7 @@ class _TorControlPageState extends State<TorControlPage> {
 
   Widget circuitsGenralInfo(List<Map<dynamic, dynamic>> circuitInfo) {
     return Container(
-      height: 500,
+      height: 400,
       child: ListView.separated(
           controller: ScrollController(),
           scrollDirection: Axis.vertical,
